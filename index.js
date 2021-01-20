@@ -1,1 +1,1 @@
-window.onload = () => new ContadorComponent()
+window.onload = () => new CounterComponent()

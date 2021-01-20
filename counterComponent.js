@@ -1,22 +1,19 @@
 (() => {
-
-    const BTN_REINICIAR = "btnReiniciar"
-    const ID_CONTADOR = "contador"
-    const VALOR_CONTADOR = 100
-    const PERIODO_INTERVALO = 10
-
-    class ContadorComponent {
+    class CounterComponent {
 
         constructor() {
-            this.inicializar()
+            this.BTN_RESTART = "btnReiniciar"
+            this.ID_COUNTER = "contador"
+            this.COUNTER_VALUE = 100
+            this.INTERVAL = 10
+            this.start()
         }
-        prepararContadorProxy() {
+
+        prepareCounterProxy() {
             const handler = {
                 set: (currentContext, propertyKey, newValue) => {
-                    console.log({ currentContext, propertyKey, newValue })
-                    // para parar todo o processamento
-                    if (!currentContext.valor) {
-                        currentContext.efetuarParada()
+                    if (!currentContext.value) {
+                        currentContext.stopFn()
                     }
 
                     currentContext[propertyKey] = newValue
@@ -24,79 +21,74 @@
                 }
             }
 
-            const contador = new Proxy({
-                valor: VALOR_CONTADOR,
-                efetuarParada: () => { }
+            const counter = new Proxy({
+                value: this.COUNTER_VALUE,
+                stopFn: () => { }
             }, handler)
 
-            return contador
+            return counter
 
         }
 
-        atualizarTexto = ({ elementoContador, contador }) => () => {
-            const identificadorTexto = '$$contador'
-            const textoPadrao = `Começando em <strong>${identificadorTexto}</strong> segundos...`
-            elementoContador.innerHTML = textoPadrao.replace(identificadorTexto, contador.valor--)
+        updateText = ({ counterElement, counter }) => () => {
+            const identifierText = '$$counter'
+            const text = `Começando em <strong>${identifierText}</strong> segundos...`
+            counterElement.innerHTML = text.replace(identifierText, counter.value--)
         }
 
-        agendarParadaContador({ elementoContador, idIntervalo }) {
+        scheduleStopCounter({ counterElement, idIntervalo }) {
 
             return () => {
                 clearInterval(idIntervalo)
 
-                elementoContador.innerHTML = ""
-                this.desabilitarBotao(false)
+                counterElement.innerHTML = ""
+                this.desactiveButton(false)
             }
 
         }
-        prepararBotao(elementoBotao, iniciarFn) {
+        prepareButton(elementoBotao, iniciarFn) {
             elementoBotao.addEventListener('click', iniciarFn.bind(this))
 
-            return (valor = true) => {
-                const atributo = 'disabled'
-                // evita que tenham varios eventos no botao de forma necessaria
-                // remove a funcao: pergunta do victor!
+            return (value = true) => {
+                const atribute = 'disabled'
+
                 elementoBotao.removeEventListener('click', iniciarFn.bind(this))
 
-                if (valor) {
-                    elementoBotao.setAttribute(atributo, valor)
+                if (value) {
+                    elementoBotao.setAttribute(atribute, value)
                     return;
                 }
 
-                elementoBotao.removeAttribute(atributo)
+                elementoBotao.removeAttribute(atribute)
 
             }
         }
 
-        inicializar() {
-            console.log('inicializou!!')
-            const elementoContador = document.getElementById(ID_CONTADOR)
+        start() {
+            console.log('Started!!')
+            const counterElement = document.getElementById(this.ID_COUNTER)
 
-            const contador = this.prepararContadorProxy()
-            // contador.valor = 100
-            // contador.valor = 90
-            // contador.valor = 80
-            const argumentos = {
-                elementoContador,
-                contador
+            const counter = this.prepareCounterProxy()
+            const argumentsOfFunction = {
+                counterElement,
+                counter
             }
 
-            const fn = this.atualizarTexto(argumentos)
-            const idIntervalo = setInterval(fn, PERIODO_INTERVALO)
+            const fn = this.updateText(argumentsOfFunction)
+            const idIntervalo = setInterval(fn, this.INTERVAL)
 
             {
-                const elementoBotao = document.getElementById(BTN_REINICIAR)
-                const desabilitarBotao = this.prepararBotao(elementoBotao, this.inicializar)
-                desabilitarBotao()
+                const elementoBotao = document.getElementById(this.BTN_RESTART)
+                const desactiveButton = this.prepareButton(elementoBotao, this.start)
+                desactiveButton()
 
-                const argumentos = { elementoContador, idIntervalo }
-                // const desabilitarBotao = () => console.log('desabilitou...')
-                const pararContadorFn = this.agendarParadaContador.apply({ desabilitarBotao }, [argumentos])
-                contador.efetuarParada = pararContadorFn
+                const argumentsOfFunction = { counterElement, idIntervalo }
+                const stopCounter = this.scheduleStopCounter.apply({ desactiveButton }, [argumentsOfFunction])
+                counter.stopFn = stopCounter
             }
 
         }
     }
 
-    window.ContadorComponent = ContadorComponent
+    window.CounterComponent = CounterComponent
 })()
